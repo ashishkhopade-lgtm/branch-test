@@ -1,0 +1,49 @@
+name: Gatekeeper
+on:
+  pull_request:
+    branches:
+      - dev-mt
+      - qa-mt
+      - prod-mt
+
+jobs:
+  verify-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gatekeeper Logic
+        id: gatekeeper
+        run: |
+          BASE_BRANCH="${{ github.base_ref }}"
+          HEAD_BRANCH="${{ github.head_ref }}"
+          
+          echo "Target branch: $BASE_BRANCH"
+          echo "Source branch: $HEAD_BRANCH"
+
+          # 1. Rule for dev-mt: Only allow from main-mt
+          if [[ "$BASE_BRANCH" == "dev-mt" && "$HEAD_BRANCH" != "main-mt" ]]; then
+            echo "❌ ERROR: Merges into dev-mt are ONLY allowed from main-mt branch."
+            exit 1
+          fi
+
+          # 2. Rule for qa-mt: Only allow from dev-mt
+          if [[ "$BASE_BRANCH" == "qa-mt" && "$HEAD_BRANCH" != "dev-mt" ]]; then
+            echo "❌ ERROR: Merges into qa-mt are ONLY allowed from dev-mt branch."
+            exit 1
+          fi
+
+          # 3. Rule for prod-mt: Only allow from qa-mt or hotfix-*
+          if [[ "$BASE_BRANCH" == "prod-mt" ]]; then
+            if [[ "$HEAD_BRANCH" != "qa-mt" && ! "$HEAD_BRANCH" =~ ^hotfix- ]]; then
+              echo "❌ ERROR: Merges into prod-mt are ONLY allowed from qa-mt or hotfix branches."
+              exit 1
+            fi
+          fi
+
+      - name: Send Google Chat Notification on Failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-Type: application/json' \
+          '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' \
+          -d '{
+            "text": "⚠️ *Gatekeeper Alert!* \n\n*User:* ${{ github.actor }}\n*Attempt:* '"$HEAD_BRANCH"' ➔ '"$BASE_BRANCH"'\n*Status:* ❌ Blocked by Security Policy \n\n#GitHubSecurity #GatekeeperAlert #DeploymentBlocked #CICD"
+          }'
