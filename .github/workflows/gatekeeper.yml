@@ -1,3 +1,4 @@
+# Updated Flow: dev-mt to qa-mt
 name: Gatekeeper
 on:
   pull_request:
@@ -38,6 +39,8 @@ jobs:
               exit 1
             fi
           fi
+          
+          echo "✅ SUCCESS: Authorized flow detected."
 
       - name: Send Google Chat Notification on Failure
         if: failure()
