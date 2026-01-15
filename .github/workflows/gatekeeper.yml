@@ -11,13 +11,6 @@ jobs:
   verify-source:
     runs-on: ubuntu-latest
     steps:
-      - name: Check source branch
-        run: |
-          if [[ "${{ github.head_ref }}" != "main-mt" ]]; then
-            echo "❌ ERROR: Merges into dev-mt are ONLY allowed from the main-mt branch."
-            exit 1
-          else
-            echo "✅ SUCCESS: Source branch is main-mt."
       - name: Gatekeeper Logic
         id: gatekeeper
         run: |
@@ -46,6 +39,8 @@ jobs:
               exit 1
             fi
           fi
+          
+          echo "✅ SUCCESS: Authorized flow detected."
 
       - name: Send Google Chat Notification on Failure
         if: failure()
@@ -55,4 +50,3 @@ jobs:
           -d '{
             "text": "⚠️ *Gatekeeper Alert!* \n\n*User:* ${{ github.actor }}\n*Source:* ${{ github.head_ref }}\n*Target:* ${{ github.base_ref }}\n*Result:* ❌ Blocked (Only authorized flows allowed)"
           }'
-
