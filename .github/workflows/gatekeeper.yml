@@ -45,5 +45,5 @@ jobs:
           curl -X POST -H 'Content-Type: application/json' \
           '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' \
           -d '{
-            "text": "⚠️ *Gatekeeper Alert!* \n\n*User:* ${{ github.actor }}\n*Attempt:* '"$HEAD_BRANCH"' ➔ '"$BASE_BRANCH"'\n*Status:* ❌ Blocked by Security Policy \n\n#GitHubSecurity #GatekeeperAlert #DeploymentBlocked #CICD"
+            "text": "⚠️ *Gatekeeper Alert!* \n\n*User:* ${{ github.actor }}\n*Source:* ${{ github.head_ref }}\n*Target:* ${{ github.base_ref }}\n*Result:* ❌ Blocked (Only authorized flows allowed)"
           }'
