@@ -8,7 +8,7 @@ jobs:
   verify-source:
     runs-on: ubuntu-latest
     steps:
-      - name: Check if source is main-mt
+      - name: Check source branch
         run: |
           if [[ "${{ github.head_ref }}" != "main-mt" ]]; then
             echo "❌ ERROR: Merges into dev-mt are ONLY allowed from the main-mt branch."
@@ -16,3 +16,12 @@ jobs:
           else
             echo "✅ SUCCESS: Source branch is main-mt."
           fi
+
+      - name: Send Google Chat Notification on Failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-Type: application/json' \
+          '${{ secrets.GOOGLE_CHAT_WEBHOOK }}' \
+          -d '{
+            "text": "⚠️ *Gatekeeper Alert!* \n\n*User:* ${{ github.actor }}\n*Source:* ${{ github.head_ref }}\n*Target:* dev-mt\n*Result:* ❌ Blocked (Only main-mt allowed)"
+          }'
