@@ -1,3 +1,4 @@
+# Updated Flow: dev-mt to qa-mt
 name: Gatekeeper
 on:
   pull_request:
@@ -10,6 +11,27 @@ jobs:
   verify-source:
     runs-on: ubuntu-latest
     steps:
+      - name: Gatekeeper Logic
+        id: gatekeeper
+        run: |
+          BASE_BRANCH="${{ github.base_ref }}"
+          HEAD_BRANCH="${{ github.head_ref }}"
+          
+          echo "Target branch: $BASE_BRANCH"
+          echo "Source branch: $HEAD_BRANCH"
+
+          # 1. Rule for dev-mt: Only allow from main-mt
+          if [[ "$BASE_BRANCH" == "dev-mt" && "$HEAD_BRANCH" != "main-mt" ]]; then
+            echo "❌ ERROR: Merges into dev-mt are ONLY allowed from main-mt branch."
+            exit 1
+          fi
+
+          # 2. Rule for qa-mt: Only allow from dev-mt
+          if [[ "$BASE_BRANCH" == "qa-mt" && "$HEAD_BRANCH" != "dev-mt" ]]; then
+            echo "❌ ERROR: Merges into qa-mt are ONLY allowed from dev-mt branch."
+            exit 1
+          else
+            echo "✅ SUCCESS: Source branch is main-mt."
       - name: Gatekeeper Logic
         id: gatekeeper
         run: |
@@ -47,3 +69,4 @@ jobs:
           -d '{
             "text": "⚠️ *Gatekeeper Alert!* \n\n*User:* ${{ github.actor }}\n*Source:* ${{ github.head_ref }}\n*Target:* ${{ github.base_ref }}\n*Result:* ❌ Blocked (Only authorized flows allowed)"
           }'
+
